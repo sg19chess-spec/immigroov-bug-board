@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Image from "next/image";
 import { Bug, BugPriority } from "@/lib/types";
 import PriorityBadge from "@/components/PriorityBadge";
+import ImageLightbox from "@/components/ImageLightbox";
 
 const BORDER_COLORS: Record<BugPriority, string> = {
   high: "border-l-red-500",
@@ -24,6 +26,7 @@ export default function BugCard({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: bug.id });
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const style = transform
     ? {
@@ -76,7 +79,14 @@ export default function BugCard({
       )}
 
       {thumbnail && (
-        <div className="relative mb-2 h-28 w-full overflow-hidden rounded-lg">
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxOpen(true);
+          }}
+          className="relative mb-2 h-28 w-full overflow-hidden rounded-lg"
+        >
           <Image
             src={thumbnail}
             alt={bug.title}
@@ -90,6 +100,14 @@ export default function BugCard({
             </span>
           )}
         </div>
+      )}
+
+      {lightboxOpen && (
+        <ImageLightbox
+          urls={bug.screenshot_urls}
+          startIndex={0}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
       <div className="flex items-start justify-between gap-2 pr-10">
         <h3 className="text-sm font-semibold text-slate-900">{bug.title}</h3>
