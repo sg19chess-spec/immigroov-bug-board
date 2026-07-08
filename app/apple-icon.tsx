@@ -16,7 +16,7 @@ export default function AppleIcon() {
           background: "#4f46e5",
         }}
       >
-        <div style={{ fontSize: 110, display: "flex" }}>🐞</div>
+        <div style={{ fontSize: 110, display: "flex" }}>🎯</div>
       </div>
     ),
     { ...size }

@@ -13,7 +13,7 @@ export async function GET() {
           background: "#4f46e5",
         }}
       >
-        <div style={{ fontSize: 300, display: "flex" }}>🐞</div>
+        <div style={{ fontSize: 300, display: "flex" }}>🎯</div>
       </div>
     ),
     { width: 512, height: 512 }

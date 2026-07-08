@@ -17,7 +17,7 @@ export default function Icon() {
           borderRadius: 40,
         }}
       >
-        <div style={{ fontSize: 120, display: "flex" }}>🐞</div>
+        <div style={{ fontSize: 120, display: "flex" }}>🎯</div>
       </div>
     ),
     { ...size }
