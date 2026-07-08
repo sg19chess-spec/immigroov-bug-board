@@ -22,6 +22,7 @@ import BugColumn from "@/components/BugColumn";
 import MoveSheet from "@/components/MoveSheet";
 import EditBugModal from "@/components/EditBugModal";
 import FilterBar, { SortOption } from "@/components/FilterBar";
+import { useIsDesktop } from "@/lib/useIsDesktop";
 
 const PRIORITY_ORDER: Record<BugPriority, number> = {
   high: 0,
@@ -40,6 +41,7 @@ export default function BoardPage() {
     new Set(BUG_PRIORITIES)
   );
   const [sort, setSort] = useState<SortOption>("newest");
+  const isDesktop = useIsDesktop();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -239,30 +241,30 @@ export default function BoardPage() {
         ))}
       </div>
 
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="hidden gap-4 md:grid md:grid-cols-3">
-          {BUG_STATUSES.map((status) => (
-            <BugColumn
-              key={status}
-              status={status}
-              bugs={grouped[status]}
-              onEdit={(bug) => setEditingBug(bug)}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-
-        {/* Mobile: tap-to-move instead of drag */}
-        <div className="md:hidden">
-          <BugColumn
-            status={activeTab}
-            bugs={grouped[activeTab]}
-            onCardClick={(bug) => setMovingBug(bug)}
-            onEdit={(bug) => setEditingBug(bug)}
-            onDelete={handleDelete}
-          />
-        </div>
-      </DndContext>
+      {isDesktop ? (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="grid gap-4 md:grid-cols-3">
+            {BUG_STATUSES.map((status) => (
+              <BugColumn
+                key={status}
+                status={status}
+                bugs={grouped[status]}
+                onEdit={(bug) => setEditingBug(bug)}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </DndContext>
+      ) : (
+        // Mobile: tap-to-move instead of drag
+        <BugColumn
+          status={activeTab}
+          bugs={grouped[activeTab]}
+          onCardClick={(bug) => setMovingBug(bug)}
+          onEdit={(bug) => setEditingBug(bug)}
+          onDelete={handleDelete}
+        />
+      )}
 
       {/* Mobile floating action button */}
       <Link
