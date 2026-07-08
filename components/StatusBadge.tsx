@@ -1,0 +1,17 @@
+import { BugStatus, STATUS_LABELS } from "@/lib/types";
+
+const COLORS: Record<BugStatus, string> = {
+  yet_to_review: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+  in_progress: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  completed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+};
+
+export default function StatusBadge({ status }: { status: BugStatus }) {
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${COLORS[status]}`}
+    >
+      {STATUS_LABELS[status]}
+    </span>
+  );
+}
