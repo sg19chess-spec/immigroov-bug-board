@@ -1,13 +1,16 @@
 export type BugStatus = "yet_to_review" | "in_progress" | "completed";
 export type BugPriority = "high" | "medium" | "low";
+export type IssueType = "bug" | "feature_request";
 
 export interface Bug {
   id: string;
+  ref_id: string;
   title: string;
   description: string | null;
   screenshot_urls: string[];
   status: BugStatus;
   priority: BugPriority;
+  issue_type: IssueType;
   reported_by: string | null;
   created_at: string;
   updated_at: string;
@@ -31,6 +34,13 @@ export const PRIORITY_LABELS: Record<BugPriority, string> = {
   high: "High",
   medium: "Medium",
   low: "Low",
+};
+
+export const ISSUE_TYPES: IssueType[] = ["bug", "feature_request"];
+
+export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
+  bug: "Bug",
+  feature_request: "Feature Request",
 };
 
 export interface Todo {

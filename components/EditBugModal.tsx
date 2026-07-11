@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Bug, BugPriority } from "@/lib/types";
+import { Bug, BugPriority, IssueType } from "@/lib/types";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
+import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
+import IssueTypeSelect from "@/components/IssueTypeSelect";
 
 export default function EditBugModal({
   bug,
@@ -22,11 +24,29 @@ export default function EditBugModal({
   const [description, setDescription] = useState(bug.description ?? "");
   const [reportedBy, setReportedBy] = useState(bug.reported_by ?? "");
   const [priority, setPriority] = useState<BugPriority>(bug.priority);
+  const [issueType, setIssueType] = useState<IssueType>(bug.issue_type);
   const [existingUrls, setExistingUrls] = useState(bug.screenshot_urls);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePastedFiles = useCallback((files: File[]) => {
+    setNewFiles((prev) => [...prev, ...files]);
+  }, []);
+  usePasteImages(handlePastedFiles);
+
+  const newPreviews = useMemo(
+    () => newFiles.map((file) => URL.createObjectURL(file)),
+    [newFiles]
+  );
+  useEffect(() => {
+    return () => newPreviews.forEach((url) => URL.revokeObjectURL(url));
+  }, [newPreviews]);
+
+  function removeNewFile(index: number) {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSave() {
     if (!title.trim()) {
@@ -49,6 +69,7 @@ export default function EditBugModal({
           reported_by: reportedBy,
           screenshot_urls,
           priority,
+          issue_type: issueType,
         }),
       });
 
@@ -91,9 +112,21 @@ export default function EditBugModal({
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl md:p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Edit Bug</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">Edit Bug</h2>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+            {bug.ref_id}
+          </span>
+        </div>
 
         <div className="flex flex-col gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Issue Type
+            </label>
+            <IssueTypeSelect value={issueType} onChange={setIssueType} />
+          </div>
+
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Title *
@@ -135,7 +168,7 @@ export default function EditBugModal({
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Screenshots
             </label>
-            {existingUrls.length > 0 && (
+            {(existingUrls.length > 0 || newPreviews.length > 0) && (
               <div className="mb-2 flex flex-wrap gap-2">
                 {existingUrls.map((url) => (
                   <div key={url} className="relative h-16 w-16">
@@ -157,15 +190,40 @@ export default function EditBugModal({
                     </button>
                   </div>
                 ))}
+                {newPreviews.map((url, i) => (
+                  <div key={url} className="relative h-16 w-16">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt="new screenshot"
+                      className="h-full w-full rounded-lg object-cover"
+                    />
+                    <button
+                      onClick={() => removeNewFile(i)}
+                      className="absolute -right-1 -top-1 rounded-full bg-black/70 px-1 text-xs text-white"
+                      aria-label="Remove screenshot"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
             <input
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
+              onChange={(e) =>
+                setNewFiles((prev) => [
+                  ...prev,
+                  ...Array.from(e.target.files ?? []),
+                ])
+              }
               className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
             />
+            <p className="mt-1 text-xs text-slate-400">
+              Tip: you can paste (Ctrl+V) a screenshot directly.
+            </p>
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

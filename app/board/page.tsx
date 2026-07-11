@@ -157,7 +157,8 @@ export default function BoardPage() {
     if (!q) return true;
     return (
       b.title.toLowerCase().includes(q) ||
-      (b.description ?? "").toLowerCase().includes(q)
+      (b.description ?? "").toLowerCase().includes(q) ||
+      b.ref_id.toLowerCase().includes(q)
     );
   });
 

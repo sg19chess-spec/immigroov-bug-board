@@ -109,6 +109,16 @@ export default function BugCard({
           onClose={() => setLightboxOpen(false)}
         />
       )}
+      <div className="mb-1 flex items-center gap-1.5 pr-10">
+        <span className="font-mono text-[10px] font-medium text-slate-400">
+          {bug.ref_id}
+        </span>
+        {bug.issue_type === "feature_request" && (
+          <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 ring-1 ring-violet-200">
+            Feature
+          </span>
+        )}
+      </div>
       <div className="flex items-start justify-between gap-2 pr-10">
         <h3 className="text-sm font-semibold text-slate-900">{bug.title}</h3>
       </div>

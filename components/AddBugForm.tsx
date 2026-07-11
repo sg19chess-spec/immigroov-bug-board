@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
+import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
-import { BugPriority } from "@/lib/types";
+import IssueTypeSelect from "@/components/IssueTypeSelect";
+import { BugPriority, IssueType } from "@/lib/types";
 
 export default function AddBugForm() {
   const router = useRouter();
@@ -13,9 +15,27 @@ export default function AddBugForm() {
   const [description, setDescription] = useState("");
   const [reportedBy, setReportedBy] = useState("");
   const [priority, setPriority] = useState<BugPriority>("medium");
+  const [issueType, setIssueType] = useState<IssueType>("bug");
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePastedFiles = useCallback((files: File[]) => {
+    setScreenshots((prev) => [...prev, ...files]);
+  }, []);
+  usePasteImages(handlePastedFiles);
+
+  const previews = useMemo(
+    () => screenshots.map((file) => URL.createObjectURL(file)),
+    [screenshots]
+  );
+  useEffect(() => {
+    return () => previews.forEach((url) => URL.revokeObjectURL(url));
+  }, [previews]);
+
+  function removeScreenshot(index: number) {
+    setScreenshots((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +59,7 @@ export default function AddBugForm() {
           reported_by: reportedBy,
           screenshot_urls,
           priority,
+          issue_type: issueType,
         }),
       });
 
@@ -61,6 +82,13 @@ export default function AddBugForm() {
       onSubmit={handleSubmit}
       className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6"
     >
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Issue Type
+        </label>
+        <IssueTypeSelect value={issueType} onChange={setIssueType} />
+      </div>
+
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Title *
@@ -109,13 +137,39 @@ export default function AddBugForm() {
           type="file"
           accept="image/*"
           multiple
-          onChange={(e) => setScreenshots(Array.from(e.target.files ?? []))}
+          onChange={(e) =>
+            setScreenshots((prev) => [
+              ...prev,
+              ...Array.from(e.target.files ?? []),
+            ])
+          }
           className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
         />
-        {screenshots.length > 0 && (
-          <p className="mt-1 text-xs text-slate-500">
-            {screenshots.length} file(s) selected
-          </p>
+        <p className="mt-1 text-xs text-slate-400">
+          Tip: you can paste (Ctrl+V) a screenshot directly into this page.
+        </p>
+
+        {previews.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {previews.map((url, i) => (
+              <div key={url} className="relative h-16 w-16">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Screenshot ${i + 1}`}
+                  className="h-full w-full rounded-lg object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeScreenshot(i)}
+                  className="absolute -right-1 -top-1 rounded-full bg-black/70 px-1 text-xs text-white"
+                  aria-label="Remove screenshot"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

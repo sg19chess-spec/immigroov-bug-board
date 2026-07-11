@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { BUG_PRIORITIES, BUG_STATUSES } from "@/lib/types";
+import { BUG_PRIORITIES, BUG_STATUSES, ISSUE_TYPES } from "@/lib/types";
 
 export async function PATCH(
   request: NextRequest,
@@ -8,8 +8,15 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const { status, title, description, reported_by, screenshot_urls, priority } =
-    body;
+  const {
+    status,
+    title,
+    description,
+    reported_by,
+    screenshot_urls,
+    priority,
+    issue_type,
+  } = body;
 
   if (status !== undefined && !BUG_STATUSES.includes(status)) {
     return NextResponse.json({ error: "invalid status" }, { status: 400 });
@@ -19,6 +26,10 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid priority" }, { status: 400 });
   }
 
+  if (issue_type !== undefined && !ISSUE_TYPES.includes(issue_type)) {
+    return NextResponse.json({ error: "invalid issue_type" }, { status: 400 });
+  }
+
   const update: Record<string, unknown> = {};
   if (status !== undefined) update.status = status;
   if (title !== undefined) update.title = title;
@@ -26,6 +37,7 @@ export async function PATCH(
   if (reported_by !== undefined) update.reported_by = reported_by;
   if (screenshot_urls !== undefined) update.screenshot_urls = screenshot_urls;
   if (priority !== undefined) update.priority = priority;
+  if (issue_type !== undefined) update.issue_type = issue_type;
 
   const { data, error } = await supabase
     .from("bugs")

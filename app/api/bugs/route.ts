@@ -16,7 +16,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { title, description, screenshot_urls, reported_by, priority } = body;
+  const { title, description, screenshot_urls, reported_by, priority, issue_type } =
+    body;
 
   if (!title || typeof title !== "string") {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -24,7 +25,14 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("bugs")
-    .insert({ title, description, screenshot_urls, reported_by, priority })
+    .insert({
+      title,
+      description,
+      screenshot_urls,
+      reported_by,
+      priority,
+      issue_type,
+    })
     .select()
     .single();
 
