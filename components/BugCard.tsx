@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Bug, BugPriority } from "@/lib/types";
 import PriorityBadge from "@/components/PriorityBadge";
 import ImageLightbox from "@/components/ImageLightbox";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const BORDER_COLORS: Record<BugPriority, string> = {
   high: "border-l-red-500",
@@ -47,36 +48,35 @@ export default function BugCard({
       onClick={onClick}
       className={`group relative rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer touch-none active:cursor-grabbing ${BORDER_COLORS[bug.priority]}`}
     >
-      {(onEdit || onDelete) && (
-        <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-          {onEdit && (
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-indigo-600"
-              aria-label="Edit bug"
-            >
-              ✎
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-red-600"
-              aria-label="Delete bug"
-            >
-              🗑
-            </button>
-          )}
-        </div>
-      )}
+      <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        <WhatsAppButton bug={bug} stopPropagation />
+        {onEdit && (
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-indigo-600"
+            aria-label="Edit bug"
+          >
+            ✎
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs text-slate-500 shadow-sm ring-1 ring-slate-200 hover:text-red-600"
+            aria-label="Delete bug"
+          >
+            🗑
+          </button>
+        )}
+      </div>
 
       {thumbnail && (
         <div
@@ -109,7 +109,7 @@ export default function BugCard({
           onClose={() => setLightboxOpen(false)}
         />
       )}
-      <div className="mb-1 flex items-center gap-1.5 pr-10">
+      <div className="mb-1 flex items-center gap-1.5 pr-20">
         <span className="font-mono text-[10px] font-medium text-slate-400">
           {bug.ref_id}
         </span>
@@ -119,7 +119,7 @@ export default function BugCard({
           </span>
         )}
       </div>
-      <div className="flex items-start justify-between gap-2 pr-10">
+      <div className="flex items-start justify-between gap-2 pr-20">
         <h3 className="text-sm font-semibold text-slate-900">{bug.title}</h3>
       </div>
       {bug.description && (

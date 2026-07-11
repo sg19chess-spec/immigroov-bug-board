@@ -16,6 +16,8 @@ import {
   BUG_STATUSES,
   BugPriority,
   BugStatus,
+  ISSUE_TYPES,
+  IssueType,
   STATUS_LABELS,
 } from "@/lib/types";
 import BugColumn from "@/components/BugColumn";
@@ -39,6 +41,9 @@ export default function BoardPage() {
   const [search, setSearch] = useState("");
   const [activePriorities, setActivePriorities] = useState<Set<BugPriority>>(
     new Set(BUG_PRIORITIES)
+  );
+  const [activeIssueTypes, setActiveIssueTypes] = useState<Set<IssueType>>(
+    new Set(ISSUE_TYPES)
   );
   const [sort, setSort] = useState<SortOption>("newest");
   const isDesktop = useIsDesktop();
@@ -137,6 +142,15 @@ export default function BoardPage() {
     });
   }
 
+  function toggleIssueType(type: IssueType) {
+    setActiveIssueTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  }
+
   function sortBugs(list: Bug[]): Bug[] {
     const sorted = [...list];
     if (sort === "newest") {
@@ -153,6 +167,7 @@ export default function BoardPage() {
 
   const filteredBugs = bugs.filter((b) => {
     if (!activePriorities.has(b.priority)) return false;
+    if (!activeIssueTypes.has(b.issue_type)) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -221,6 +236,8 @@ export default function BoardPage() {
       <FilterBar
         activePriorities={activePriorities}
         onTogglePriority={togglePriority}
+        activeIssueTypes={activeIssueTypes}
+        onToggleIssueType={toggleIssueType}
         sort={sort}
         onSortChange={setSort}
       />

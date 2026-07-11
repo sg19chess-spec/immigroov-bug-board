@@ -1,10 +1,17 @@
 "use client";
 
-import { BUG_PRIORITIES, BugPriority, PRIORITY_LABELS } from "@/lib/types";
+import {
+  BUG_PRIORITIES,
+  BugPriority,
+  ISSUE_TYPES,
+  ISSUE_TYPE_LABELS,
+  IssueType,
+  PRIORITY_LABELS,
+} from "@/lib/types";
 
 export type SortOption = "newest" | "oldest" | "priority_high" | "priority_low";
 
-const CHIP_ACTIVE: Record<BugPriority, string> = {
+const PRIORITY_CHIP_ACTIVE: Record<BugPriority, string> = {
   high: "bg-red-500 text-white ring-red-500",
   medium: "bg-yellow-500 text-white ring-yellow-500",
   low: "bg-green-500 text-white ring-green-500",
@@ -13,17 +20,39 @@ const CHIP_ACTIVE: Record<BugPriority, string> = {
 export default function FilterBar({
   activePriorities,
   onTogglePriority,
+  activeIssueTypes,
+  onToggleIssueType,
   sort,
   onSortChange,
 }: {
   activePriorities: Set<BugPriority>;
   onTogglePriority: (priority: BugPriority) => void;
+  activeIssueTypes: Set<IssueType>;
+  onToggleIssueType: (type: IssueType) => void;
   sort: SortOption;
   onSortChange: (sort: SortOption) => void;
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <span className="text-xs font-medium text-slate-500">Priority:</span>
+      <span className="text-xs font-medium text-slate-500">Type:</span>
+      {ISSUE_TYPES.map((type) => {
+        const active = activeIssueTypes.has(type);
+        return (
+          <button
+            key={type}
+            onClick={() => onToggleIssueType(type)}
+            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${
+              active
+                ? "bg-indigo-600 text-white ring-indigo-600"
+                : "bg-white text-slate-500 ring-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            {ISSUE_TYPE_LABELS[type]}
+          </button>
+        );
+      })}
+
+      <span className="ml-2 text-xs font-medium text-slate-500">Priority:</span>
       {BUG_PRIORITIES.map((priority) => {
         const active = activePriorities.has(priority);
         return (
@@ -32,7 +61,7 @@ export default function FilterBar({
             onClick={() => onTogglePriority(priority)}
             className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${
               active
-                ? CHIP_ACTIVE[priority]
+                ? PRIORITY_CHIP_ACTIVE[priority]
                 : "bg-white text-slate-500 ring-slate-300 hover:bg-slate-50"
             }`}
           >
