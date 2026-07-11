@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Bug, BugPriority, IssueType } from "@/lib/types";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
-import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
-import ScreenshotButtons from "@/components/ScreenshotButtons";
+import ScreenshotField from "@/components/ScreenshotField";
 
 export default function EditBugModal({
   bug,
@@ -31,23 +30,6 @@ export default function EditBugModal({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const addFiles = useCallback((files: File[]) => {
-    setNewFiles((prev) => [...prev, ...files]);
-  }, []);
-  usePasteImages(addFiles);
-
-  const newPreviews = useMemo(
-    () => newFiles.map((file) => URL.createObjectURL(file)),
-    [newFiles]
-  );
-  useEffect(() => {
-    return () => newPreviews.forEach((url) => URL.revokeObjectURL(url));
-  }, [newPreviews]);
-
-  function removeNewFile(index: number) {
-    setNewFiles((prev) => prev.filter((_, i) => i !== index));
-  }
 
   async function handleSave() {
     if (!title.trim()) {
@@ -169,7 +151,7 @@ export default function EditBugModal({
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Screenshots
             </label>
-            {(existingUrls.length > 0 || newPreviews.length > 0) && (
+            {existingUrls.length > 0 && (
               <div className="mb-2 flex flex-wrap gap-2">
                 {existingUrls.map((url) => (
                   <div key={url} className="relative h-16 w-16">
@@ -191,26 +173,9 @@ export default function EditBugModal({
                     </button>
                   </div>
                 ))}
-                {newPreviews.map((url, i) => (
-                  <div key={url} className="relative h-16 w-16">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt="new screenshot"
-                      className="h-full w-full rounded-lg object-cover"
-                    />
-                    <button
-                      onClick={() => removeNewFile(i)}
-                      className="absolute -right-1 -top-1 rounded-full bg-black/70 px-1 text-xs text-white"
-                      aria-label="Remove screenshot"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
               </div>
             )}
-            <ScreenshotButtons onAdd={addFiles} />
+            <ScreenshotField files={newFiles} setFiles={setNewFiles} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

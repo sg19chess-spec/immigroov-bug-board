@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
-import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
-import ScreenshotButtons from "@/components/ScreenshotButtons";
+import ScreenshotField from "@/components/ScreenshotField";
 import { BugPriority, IssueType } from "@/lib/types";
 
 export default function AddBugForm() {
@@ -20,23 +19,6 @@ export default function AddBugForm() {
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const addFiles = useCallback((files: File[]) => {
-    setScreenshots((prev) => [...prev, ...files]);
-  }, []);
-  usePasteImages(addFiles);
-
-  const previews = useMemo(
-    () => screenshots.map((file) => URL.createObjectURL(file)),
-    [screenshots]
-  );
-  useEffect(() => {
-    return () => previews.forEach((url) => URL.revokeObjectURL(url));
-  }, [previews]);
-
-  function removeScreenshot(index: number) {
-    setScreenshots((prev) => prev.filter((_, i) => i !== index));
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -134,30 +116,7 @@ export default function AddBugForm() {
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Screenshots
         </label>
-        <ScreenshotButtons onAdd={addFiles} />
-
-        {previews.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {previews.map((url, i) => (
-              <div key={url} className="relative h-16 w-16">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`Screenshot ${i + 1}`}
-                  className="h-full w-full rounded-lg object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeScreenshot(i)}
-                  className="absolute -right-1 -top-1 rounded-full bg-black/70 px-1 text-xs text-white"
-                  aria-label="Remove screenshot"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <ScreenshotField files={screenshots} setFiles={setScreenshots} />
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
