@@ -7,6 +7,7 @@ import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
+import ScreenshotButtons from "@/components/ScreenshotButtons";
 import { BugPriority, IssueType } from "@/lib/types";
 
 export default function AddBugForm() {
@@ -20,10 +21,10 @@ export default function AddBugForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePastedFiles = useCallback((files: File[]) => {
+  const addFiles = useCallback((files: File[]) => {
     setScreenshots((prev) => [...prev, ...files]);
   }, []);
-  usePasteImages(handlePastedFiles);
+  usePasteImages(addFiles);
 
   const previews = useMemo(
     () => screenshots.map((file) => URL.createObjectURL(file)),
@@ -133,21 +134,7 @@ export default function AddBugForm() {
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Screenshots
         </label>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) =>
-            setScreenshots((prev) => [
-              ...prev,
-              ...Array.from(e.target.files ?? []),
-            ])
-          }
-          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
-        />
-        <p className="mt-1 text-xs text-slate-400">
-          Tip: you can paste (Ctrl+V) a screenshot directly into this page.
-        </p>
+        <ScreenshotButtons onAdd={addFiles} />
 
         {previews.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">

@@ -8,6 +8,7 @@ import { usePasteImages } from "@/lib/usePasteImages";
 import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
+import ScreenshotButtons from "@/components/ScreenshotButtons";
 
 export default function EditBugModal({
   bug,
@@ -31,10 +32,10 @@ export default function EditBugModal({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePastedFiles = useCallback((files: File[]) => {
+  const addFiles = useCallback((files: File[]) => {
     setNewFiles((prev) => [...prev, ...files]);
   }, []);
-  usePasteImages(handlePastedFiles);
+  usePasteImages(addFiles);
 
   const newPreviews = useMemo(
     () => newFiles.map((file) => URL.createObjectURL(file)),
@@ -209,21 +210,7 @@ export default function EditBugModal({
                 ))}
               </div>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) =>
-                setNewFiles((prev) => [
-                  ...prev,
-                  ...Array.from(e.target.files ?? []),
-                ])
-              }
-              className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
-            />
-            <p className="mt-1 text-xs text-slate-400">
-              Tip: you can paste (Ctrl+V) a screenshot directly.
-            </p>
+            <ScreenshotButtons onAdd={addFiles} />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
