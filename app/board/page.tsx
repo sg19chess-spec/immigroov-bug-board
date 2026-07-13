@@ -24,6 +24,7 @@ import BugColumn from "@/components/BugColumn";
 import MoveSheet from "@/components/MoveSheet";
 import EditBugModal from "@/components/EditBugModal";
 import FilterBar, { SortOption } from "@/components/FilterBar";
+import CopyMarkdownButton from "@/components/CopyMarkdownButton";
 import { useIsDesktop } from "@/lib/useIsDesktop";
 
 const PRIORITY_ORDER: Record<BugPriority, number> = {
@@ -202,12 +203,15 @@ export default function BoardPage() {
             Track and triage bugs reported by the test group.
           </p>
         </div>
-        <Link
-          href="/add"
-          className="hidden rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 md:inline-block"
-        >
-          + Report Bug
-        </Link>
+        <div className="flex items-center gap-2">
+          <CopyMarkdownButton bugs={bugs} />
+          <Link
+            href="/add"
+            className="hidden rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 md:inline-block"
+          >
+            + Report Bug
+          </Link>
+        </div>
       </div>
 
       <div className="relative mb-4 md:max-w-sm">
