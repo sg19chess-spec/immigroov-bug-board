@@ -29,6 +29,12 @@ export default function Header() {
           >
             To-Do
           </Link>
+          <Link
+            href="/testing"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Tested Scenarios
+          </Link>
         </nav>
       </div>
     </header>

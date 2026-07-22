@@ -51,3 +51,20 @@ export interface Todo {
   created_at: string;
   closed_at: string | null;
 }
+
+export interface TestModule {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface TestCase {
+  id: string;
+  module_id: string;
+  description: string;
+  added_by: string | null;
+  tested: boolean;
+  tested_by: string | null;
+  created_at: string;
+  tested_at: string | null;
+}
