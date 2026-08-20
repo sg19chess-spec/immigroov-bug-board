@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { normalizeTags } from "@/lib/tags";
 
 export async function GET() {
   const { data, error } = await supabase
@@ -16,8 +17,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { title, description, screenshot_urls, reported_by, priority, issue_type } =
-    body;
+  const {
+    title,
+    description,
+    screenshot_urls,
+    reported_by,
+    priority,
+    issue_type,
+    tags,
+  } = body;
 
   if (!title || typeof title !== "string") {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -32,6 +40,7 @@ export async function POST(request: NextRequest) {
       reported_by,
       priority,
       issue_type,
+      tags: normalizeTags(tags),
     })
     .select()
     .single();

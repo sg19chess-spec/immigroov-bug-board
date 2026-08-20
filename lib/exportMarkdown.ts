@@ -1,6 +1,10 @@
 import { Bug, BUG_STATUSES, PRIORITY_LABELS, STATUS_LABELS } from "@/lib/types";
 
-export function bugsToMarkdown(bugs: Bug[]): string {
+export function bugsToMarkdown(
+  bugs: Bug[],
+  options?: { includeImages?: boolean }
+): string {
+  const includeImages = options?.includeImages ?? false;
   const lines: string[] = ["# Immigroov Bug Board", ""];
 
   for (const status of BUG_STATUSES) {
@@ -17,6 +21,14 @@ export function bugsToMarkdown(bugs: Bug[]): string {
       );
       if (bug.description) {
         lines.push(`  ${bug.description.replace(/\n/g, "\n  ")}`);
+      }
+      if (bug.tags.length > 0) {
+        lines.push(`  Tags: ${bug.tags.map((t) => `#${t}`).join(" ")}`);
+      }
+      if (includeImages && bug.screenshot_urls.length > 0) {
+        for (const [i, url] of bug.screenshot_urls.entries()) {
+          lines.push(`  ![${bug.ref_id} screenshot ${i + 1}](${url})`);
+        }
       }
       lines.push("");
     }

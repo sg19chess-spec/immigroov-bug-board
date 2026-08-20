@@ -7,6 +7,7 @@ import BugCard from "./BugCard";
 const DOT_COLORS: Record<BugStatus, string> = {
   yet_to_review: "bg-slate-400",
   in_progress: "bg-amber-500",
+  to_be_tested: "bg-sky-500",
   completed: "bg-emerald-500",
 };
 
@@ -16,6 +17,7 @@ export default function BugColumn({
   onCardClick,
   onEdit,
   onDelete,
+  draggable = true,
   className,
 }: {
   status: BugStatus;
@@ -23,6 +25,7 @@ export default function BugColumn({
   onCardClick?: (bug: Bug) => void;
   onEdit?: (bug: Bug) => void;
   onDelete?: (bug: Bug) => void;
+  draggable?: boolean;
   className?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -54,6 +57,7 @@ export default function BugColumn({
               onClick={() => onCardClick?.(bug)}
               onEdit={onEdit ? () => onEdit(bug) : undefined}
               onDelete={onDelete ? () => onDelete(bug) : undefined}
+              draggable={draggable}
             />
           ))
         )}

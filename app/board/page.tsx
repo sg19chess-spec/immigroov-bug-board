@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -46,6 +46,7 @@ export default function BoardPage() {
   const [activeIssueTypes, setActiveIssueTypes] = useState<Set<IssueType>>(
     new Set(ISSUE_TYPES)
   );
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<SortOption>("newest");
   const isDesktop = useIsDesktop();
 
@@ -152,6 +153,23 @@ export default function BoardPage() {
     });
   }
 
+  function toggleTag(tag: string) {
+    setActiveTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const bug of bugs) {
+      for (const tag of bug.tags) tags.add(tag);
+    }
+    return [...tags].sort();
+  }, [bugs]);
+
   function sortBugs(list: Bug[]): Bug[] {
     const sorted = [...list];
     if (sort === "newest") {
@@ -169,12 +187,14 @@ export default function BoardPage() {
   const filteredBugs = bugs.filter((b) => {
     if (!activePriorities.has(b.priority)) return false;
     if (!activeIssueTypes.has(b.issue_type)) return false;
+    if (activeTags.size > 0 && !b.tags.some((t) => activeTags.has(t))) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
       b.title.toLowerCase().includes(q) ||
       (b.description ?? "").toLowerCase().includes(q) ||
-      b.ref_id.toLowerCase().includes(q)
+      b.ref_id.toLowerCase().includes(q) ||
+      b.tags.some((t) => t.includes(q))
     );
   });
 
@@ -183,7 +203,7 @@ export default function BoardPage() {
       acc[status] = sortBugs(filteredBugs.filter((b) => b.status === status));
       return acc;
     },
-    { yet_to_review: [], in_progress: [], completed: [] }
+    { yet_to_review: [], in_progress: [], to_be_tested: [], completed: [] }
   );
 
   if (loading) {
@@ -242,17 +262,20 @@ export default function BoardPage() {
         onTogglePriority={togglePriority}
         activeIssueTypes={activeIssueTypes}
         onToggleIssueType={toggleIssueType}
+        allTags={allTags}
+        activeTags={activeTags}
+        onToggleTag={toggleTag}
         sort={sort}
         onSortChange={setSort}
       />
 
       {/* Mobile tabs */}
-      <div className="mb-4 flex gap-2 md:hidden">
+      <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
         {BUG_STATUSES.map((status) => (
           <button
             key={status}
             onClick={() => setActiveTab(status)}
-            className={`flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition ${
               activeTab === status
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-white text-slate-600 ring-1 ring-slate-200"
@@ -265,7 +288,7 @@ export default function BoardPage() {
 
       {isDesktop ? (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {BUG_STATUSES.map((status) => (
               <BugColumn
                 key={status}
@@ -278,13 +301,16 @@ export default function BoardPage() {
           </div>
         </DndContext>
       ) : (
-        // Mobile: tap-to-move instead of drag
+        // Mobile: tap-to-move instead of drag. Cards must not be
+        // draggable here — draggable cards set touch-action: none,
+        // which blocks native touch scrolling on the page.
         <BugColumn
           status={activeTab}
           bugs={grouped[activeTab]}
           onCardClick={(bug) => setMovingBug(bug)}
           onEdit={(bug) => setEditingBug(bug)}
           onDelete={handleDelete}
+          draggable={false}
         />
       )}
 

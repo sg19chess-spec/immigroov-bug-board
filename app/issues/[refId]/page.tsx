@@ -83,6 +83,19 @@ export default function IssueDetailPage({
           </p>
         )}
 
+        {bug.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {bug.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         {bug.screenshot_urls.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {bug.screenshot_urls.map((url) => (

@@ -1,4 +1,8 @@
-export type BugStatus = "yet_to_review" | "in_progress" | "completed";
+export type BugStatus =
+  | "yet_to_review"
+  | "in_progress"
+  | "to_be_tested"
+  | "completed";
 export type BugPriority = "high" | "medium" | "low";
 export type IssueType = "bug" | "feature_request";
 
@@ -11,6 +15,7 @@ export interface Bug {
   status: BugStatus;
   priority: BugPriority;
   issue_type: IssueType;
+  tags: string[];
   reported_by: string | null;
   created_at: string;
   updated_at: string;
@@ -19,12 +24,14 @@ export interface Bug {
 export const BUG_STATUSES: BugStatus[] = [
   "yet_to_review",
   "in_progress",
+  "to_be_tested",
   "completed",
 ];
 
 export const STATUS_LABELS: Record<BugStatus, string> = {
   yet_to_review: "Yet to Review",
   in_progress: "In Progress",
+  to_be_tested: "To Be Tested",
   completed: "Completed",
 };
 

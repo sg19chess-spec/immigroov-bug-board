@@ -19,11 +19,13 @@ export default function BugCard({
   onClick,
   onEdit,
   onDelete,
+  draggable = true,
 }: {
   bug: Bug;
   onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  draggable?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: bug.id });
@@ -42,11 +44,11 @@ export default function BugCard({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
+      style={draggable ? style : undefined}
+      {...(draggable ? listeners : undefined)}
+      {...(draggable ? attributes : undefined)}
       onClick={onClick}
-      className={`group relative rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer touch-none active:cursor-grabbing ${BORDER_COLORS[bug.priority]}`}
+      className={`group relative rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer ${draggable ? "touch-none active:cursor-grabbing" : ""} ${BORDER_COLORS[bug.priority]}`}
     >
       <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <WhatsAppButton bug={bug} stopPropagation />
@@ -126,6 +128,18 @@ export default function BugCard({
         <p className="mt-1 line-clamp-2 text-xs text-slate-500">
           {bug.description}
         </p>
+      )}
+      {bug.tags.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {bug.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       )}
       <div className="mt-2 flex items-center justify-between gap-2">
         <PriorityBadge priority={bug.priority} />

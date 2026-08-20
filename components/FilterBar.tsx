@@ -18,6 +18,9 @@ export default function FilterBar({
   onTogglePriority,
   activeIssueTypes,
   onToggleIssueType,
+  allTags,
+  activeTags,
+  onToggleTag,
   sort,
   onSortChange,
 }: {
@@ -25,6 +28,9 @@ export default function FilterBar({
   onTogglePriority: (priority: BugPriority) => void;
   activeIssueTypes: Set<IssueType>;
   onToggleIssueType: (type: IssueType) => void;
+  allTags: string[];
+  activeTags: Set<string>;
+  onToggleTag: (tag: string) => void;
   sort: SortOption;
   onSortChange: (sort: SortOption) => void;
 }) {
@@ -41,9 +47,10 @@ export default function FilterBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const activeCount =
-    activeIssueTypes.size + activePriorities.size;
-  const totalCount = ISSUE_TYPES.length + BUG_PRIORITIES.length;
+  const isFiltered =
+    activeIssueTypes.size < ISSUE_TYPES.length ||
+    activePriorities.size < BUG_PRIORITIES.length ||
+    activeTags.size > 0;
 
   return (
     <div className="mb-4 flex items-center gap-2">
@@ -66,10 +73,8 @@ export default function FilterBar({
             />
           </svg>
           Filters
-          {activeCount < totalCount && (
-            <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
-              {activeCount}
-            </span>
+          {isFiltered && (
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
           )}
           <svg
             className={`h-3.5 w-3.5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
@@ -124,6 +129,28 @@ export default function FilterBar({
                 </label>
               ))}
             </div>
+
+            {allTags.length > 0 && (
+              <>
+                <p className="mb-1 mt-3 text-xs font-semibold text-slate-500">Tags</p>
+                <div className="flex max-h-32 flex-col gap-1 overflow-y-auto">
+                  {allTags.map((tag) => (
+                    <label
+                      key={tag}
+                      className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={activeTags.has(tag)}
+                        onChange={() => onToggleTag(tag)}
+                        className="h-4 w-4 accent-indigo-600"
+                      />
+                      {tag}
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

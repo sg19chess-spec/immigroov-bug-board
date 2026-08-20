@@ -7,6 +7,7 @@ import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
 import ScreenshotField from "@/components/ScreenshotField";
+import TagInput from "@/components/TagInput";
 import { BugPriority, IssueType } from "@/lib/types";
 
 export default function AddBugForm() {
@@ -16,6 +17,7 @@ export default function AddBugForm() {
   const [reportedBy, setReportedBy] = useState("");
   const [priority, setPriority] = useState<BugPriority>("medium");
   const [issueType, setIssueType] = useState<IssueType>("bug");
+  const [tags, setTags] = useState<string[]>([]);
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export default function AddBugForm() {
           screenshot_urls,
           priority,
           issue_type: issueType,
+          tags,
         }),
       });
 
@@ -110,6 +113,13 @@ export default function AddBugForm() {
           Priority
         </label>
         <PrioritySelect value={priority} onChange={setPriority} />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Tags
+        </label>
+        <TagInput value={tags} onChange={setTags} />
       </div>
 
       <div>

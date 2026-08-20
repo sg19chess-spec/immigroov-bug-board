@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { BUG_PRIORITIES, BUG_STATUSES, ISSUE_TYPES } from "@/lib/types";
+import { normalizeTags } from "@/lib/tags";
 
 export async function PATCH(
   request: NextRequest,
@@ -16,6 +17,7 @@ export async function PATCH(
     screenshot_urls,
     priority,
     issue_type,
+    tags,
   } = body;
 
   if (status !== undefined && !BUG_STATUSES.includes(status)) {
@@ -38,6 +40,7 @@ export async function PATCH(
   if (screenshot_urls !== undefined) update.screenshot_urls = screenshot_urls;
   if (priority !== undefined) update.priority = priority;
   if (issue_type !== undefined) update.issue_type = issue_type;
+  if (tags !== undefined) update.tags = normalizeTags(tags);
 
   const { data, error } = await supabase
     .from("bugs")

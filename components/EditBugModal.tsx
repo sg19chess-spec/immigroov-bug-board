@@ -8,6 +8,7 @@ import ReporterSelect from "@/components/ReporterSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
 import ScreenshotField from "@/components/ScreenshotField";
+import TagInput from "@/components/TagInput";
 
 export default function EditBugModal({
   bug,
@@ -25,6 +26,7 @@ export default function EditBugModal({
   const [reportedBy, setReportedBy] = useState(bug.reported_by ?? "");
   const [priority, setPriority] = useState<BugPriority>(bug.priority);
   const [issueType, setIssueType] = useState<IssueType>(bug.issue_type);
+  const [tags, setTags] = useState<string[]>(bug.tags ?? []);
   const [existingUrls, setExistingUrls] = useState(bug.screenshot_urls);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
@@ -53,6 +55,7 @@ export default function EditBugModal({
           screenshot_urls,
           priority,
           issue_type: issueType,
+          tags,
         }),
       });
 
@@ -145,6 +148,13 @@ export default function EditBugModal({
               Priority
             </label>
             <PrioritySelect value={priority} onChange={setPriority} />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Tags
+            </label>
+            <TagInput value={tags} onChange={setTags} />
           </div>
 
           <div>

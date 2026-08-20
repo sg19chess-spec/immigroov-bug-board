@@ -1,15 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Bug, BUG_STATUSES, BugStatus, STATUS_LABELS } from "@/lib/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Bug,
+  BUG_PRIORITIES,
+  BUG_STATUSES,
+  BugPriority,
+  BugStatus,
+  PRIORITY_LABELS,
+  STATUS_LABELS,
+} from "@/lib/types";
 import { bugsToMarkdown } from "@/lib/exportMarkdown";
 
 export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Set<BugStatus>>(new Set(BUG_STATUSES));
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<BugStatus>>(
+    new Set(BUG_STATUSES)
+  );
+  const [selectedPriorities, setSelectedPriorities] = useState<Set<BugPriority>>(
+    new Set(BUG_PRIORITIES)
+  );
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [includeImages, setIncludeImages] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const bug of bugs) {
+      for (const tag of bug.tags) tags.add(tag);
+    }
+    return [...tags].sort();
+  }, [bugs]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -22,7 +45,7 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
   }, []);
 
   function toggleStatus(status: BugStatus) {
-    setSelected((prev) => {
+    setSelectedStatuses((prev) => {
       const next = new Set(prev);
       if (next.has(status)) next.delete(status);
       else next.add(status);
@@ -30,8 +53,35 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
     });
   }
 
+  function togglePriority(priority: BugPriority) {
+    setSelectedPriorities((prev) => {
+      const next = new Set(prev);
+      if (next.has(priority)) next.delete(priority);
+      else next.add(priority);
+      return next;
+    });
+  }
+
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }
+
+  function getFilteredBugs() {
+    return bugs.filter(
+      (b) =>
+        selectedStatuses.has(b.status) &&
+        selectedPriorities.has(b.priority) &&
+        (selectedTags.size === 0 || b.tags.some((t) => selectedTags.has(t)))
+    );
+  }
+
   async function handleCopy() {
-    const markdown = bugsToMarkdown(bugs.filter((b) => selected.has(b.status)));
+    const markdown = bugsToMarkdown(getFilteredBugs(), { includeImages });
     try {
       await navigator.clipboard.writeText(markdown);
       setCopied(true);
@@ -55,8 +105,8 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
         </button>
 
         {open && (
-          <div className="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-            <p className="mb-1 text-xs font-semibold text-slate-500">Include</p>
+          <div className="absolute right-0 z-20 mt-2 w-64 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+            <p className="mb-1 text-xs font-semibold text-slate-500">Stages</p>
             <div className="mb-3 flex flex-col gap-1">
               {BUG_STATUSES.map((status) => (
                 <label
@@ -65,7 +115,7 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
                 >
                   <input
                     type="checkbox"
-                    checked={selected.has(status)}
+                    checked={selectedStatuses.has(status)}
                     onChange={() => toggleStatus(status)}
                     className="h-4 w-4 accent-indigo-600"
                   />
@@ -73,10 +123,61 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
                 </label>
               ))}
             </div>
+
+            <p className="mb-1 text-xs font-semibold text-slate-500">Priority</p>
+            <div className="mb-3 flex flex-col gap-1">
+              {BUG_PRIORITIES.map((priority) => (
+                <label
+                  key={priority}
+                  className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedPriorities.has(priority)}
+                    onChange={() => togglePriority(priority)}
+                    className="h-4 w-4 accent-indigo-600"
+                  />
+                  {PRIORITY_LABELS[priority]}
+                </label>
+              ))}
+            </div>
+
+            {allTags.length > 0 && (
+              <>
+                <p className="mb-1 text-xs font-semibold text-slate-500">Tags</p>
+                <div className="mb-3 flex max-h-28 flex-col gap-1 overflow-y-auto">
+                  {allTags.map((tag) => (
+                    <label
+                      key={tag}
+                      className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTags.has(tag)}
+                        onChange={() => toggleTag(tag)}
+                        className="h-4 w-4 accent-indigo-600"
+                      />
+                      {tag}
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <label className="mb-3 flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50">
+              <input
+                type="checkbox"
+                checked={includeImages}
+                onChange={(e) => setIncludeImages(e.target.checked)}
+                className="h-4 w-4 accent-indigo-600"
+              />
+              Include image links
+            </label>
+
             <button
               type="button"
               onClick={handleCopy}
-              disabled={selected.size === 0}
+              disabled={selectedStatuses.size === 0 || selectedPriorities.size === 0}
               className="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-40"
             >
               Copy

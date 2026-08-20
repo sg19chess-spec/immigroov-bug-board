@@ -3,6 +3,7 @@ import { BugStatus, STATUS_LABELS } from "@/lib/types";
 const COLORS: Record<BugStatus, string> = {
   yet_to_review: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   in_progress: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  to_be_tested: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
   completed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
 };
 
