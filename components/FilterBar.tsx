@@ -9,9 +9,48 @@ import {
   IssueType,
   PRIORITY_LABELS,
 } from "@/lib/types";
+import { PersonField, personLabel } from "@/lib/people";
 import { PriorityDot } from "@/components/PriorityBadge";
 
 export type SortOption = "newest" | "oldest" | "priority_high" | "priority_low";
+
+function PeopleSection({
+  title,
+  field,
+  people,
+  active,
+  onToggle,
+}: {
+  title: string;
+  field: PersonField;
+  people: string[];
+  active: Set<string>;
+  onToggle: (key: string) => void;
+}) {
+  if (people.length === 0) return null;
+
+  return (
+    <>
+      <p className="mb-1 mt-3 text-xs font-semibold text-slate-500">{title}</p>
+      <div className="flex max-h-32 flex-col gap-1 overflow-y-auto">
+        {people.map((key) => (
+          <label
+            key={key}
+            className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <input
+              type="checkbox"
+              checked={active.has(key)}
+              onChange={() => onToggle(key)}
+              className="h-4 w-4 accent-indigo-600"
+            />
+            {personLabel(key, field)}
+          </label>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function FilterBar({
   activePriorities,
@@ -21,6 +60,12 @@ export default function FilterBar({
   allTags,
   activeTags,
   onToggleTag,
+  allReporters,
+  activeReporters,
+  onToggleReporter,
+  allHandlers,
+  activeHandlers,
+  onToggleHandler,
   sort,
   onSortChange,
 }: {
@@ -31,6 +76,12 @@ export default function FilterBar({
   allTags: string[];
   activeTags: Set<string>;
   onToggleTag: (tag: string) => void;
+  allReporters: string[];
+  activeReporters: Set<string>;
+  onToggleReporter: (key: string) => void;
+  allHandlers: string[];
+  activeHandlers: Set<string>;
+  onToggleHandler: (key: string) => void;
   sort: SortOption;
   onSortChange: (sort: SortOption) => void;
 }) {
@@ -50,7 +101,9 @@ export default function FilterBar({
   const isFiltered =
     activeIssueTypes.size < ISSUE_TYPES.length ||
     activePriorities.size < BUG_PRIORITIES.length ||
-    activeTags.size > 0;
+    activeTags.size > 0 ||
+    activeReporters.size > 0 ||
+    activeHandlers.size > 0;
 
   return (
     <div className="mb-4 flex items-center gap-2">
@@ -92,7 +145,7 @@ export default function FilterBar({
         </button>
 
         {open && (
-          <div className="absolute left-0 z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+          <div className="absolute left-0 z-20 mt-2 max-h-[70vh] w-56 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
             <p className="mb-1 text-xs font-semibold text-slate-500">Issue Type</p>
             <div className="mb-3 flex flex-col gap-1">
               {ISSUE_TYPES.map((type) => (
@@ -129,6 +182,22 @@ export default function FilterBar({
                 </label>
               ))}
             </div>
+
+            <PeopleSection
+              title="Reported By"
+              field="reported_by"
+              people={allReporters}
+              active={activeReporters}
+              onToggle={onToggleReporter}
+            />
+
+            <PeopleSection
+              title="Handled By"
+              field="handled_by"
+              people={allHandlers}
+              active={activeHandlers}
+              onToggle={onToggleHandler}
+            />
 
             {allTags.length > 0 && (
               <>

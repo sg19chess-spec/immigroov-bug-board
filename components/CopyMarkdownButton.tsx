@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Bug,
   BUG_PRIORITIES,
@@ -10,7 +17,51 @@ import {
   PRIORITY_LABELS,
   STATUS_LABELS,
 } from "@/lib/types";
+import {
+  collectPeople,
+  matchesPeople,
+  PersonField,
+  personLabel,
+} from "@/lib/people";
 import { bugsToMarkdown } from "@/lib/exportMarkdown";
+
+function PeopleSection({
+  title,
+  field,
+  people,
+  selected,
+  onToggle,
+}: {
+  title: string;
+  field: PersonField;
+  people: string[];
+  selected: Set<string>;
+  onToggle: (key: string) => void;
+}) {
+  if (people.length === 0) return null;
+
+  return (
+    <>
+      <p className="mb-1 text-xs font-semibold text-slate-500">{title}</p>
+      <div className="mb-3 flex max-h-28 flex-col gap-1 overflow-y-auto">
+        {people.map((key) => (
+          <label
+            key={key}
+            className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <input
+              type="checkbox"
+              checked={selected.has(key)}
+              onChange={() => onToggle(key)}
+              className="h-4 w-4 accent-indigo-600"
+            />
+            {personLabel(key, field)}
+          </label>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
   const [open, setOpen] = useState(false);
@@ -21,6 +72,12 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
     new Set(BUG_PRIORITIES)
   );
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedReporters, setSelectedReporters] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedHandlers, setSelectedHandlers] = useState<Set<string>>(
+    new Set()
+  );
   const [includeImages, setIncludeImages] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
@@ -33,6 +90,9 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
     }
     return [...tags].sort();
   }, [bugs]);
+
+  const allReporters = useMemo(() => collectPeople(bugs, "reported_by"), [bugs]);
+  const allHandlers = useMemo(() => collectPeople(bugs, "handled_by"), [bugs]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -71,12 +131,26 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
     });
   }
 
+  function togglePerson(
+    setter: Dispatch<SetStateAction<Set<string>>>,
+    key: string
+  ) {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   function getFilteredBugs() {
     return bugs.filter(
       (b) =>
         selectedStatuses.has(b.status) &&
         selectedPriorities.has(b.priority) &&
-        (selectedTags.size === 0 || b.tags.some((t) => selectedTags.has(t)))
+        (selectedTags.size === 0 || b.tags.some((t) => selectedTags.has(t))) &&
+        matchesPeople(selectedReporters, b.reported_by) &&
+        matchesPeople(selectedHandlers, b.handled_by)
     );
   }
 
@@ -141,6 +215,22 @@ export default function CopyMarkdownButton({ bugs }: { bugs: Bug[] }) {
                 </label>
               ))}
             </div>
+
+            <PeopleSection
+              title="Reported By"
+              field="reported_by"
+              people={allReporters}
+              selected={selectedReporters}
+              onToggle={(key) => togglePerson(setSelectedReporters, key)}
+            />
+
+            <PeopleSection
+              title="Handled By"
+              field="handled_by"
+              people={allHandlers}
+              selected={selectedHandlers}
+              onToggle={(key) => togglePerson(setSelectedHandlers, key)}
+            />
 
             {allTags.length > 0 && (
               <>

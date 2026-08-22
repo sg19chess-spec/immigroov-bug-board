@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -25,6 +25,7 @@ import MoveSheet from "@/components/MoveSheet";
 import EditBugModal from "@/components/EditBugModal";
 import FilterBar, { SortOption } from "@/components/FilterBar";
 import CopyMarkdownButton from "@/components/CopyMarkdownButton";
+import { collectPeople, matchesPeople } from "@/lib/people";
 import { useIsDesktop } from "@/lib/useIsDesktop";
 
 const PRIORITY_ORDER: Record<BugPriority, number> = {
@@ -47,6 +48,10 @@ export default function BoardPage() {
     new Set(ISSUE_TYPES)
   );
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
+  const [activeReporters, setActiveReporters] = useState<Set<string>>(
+    new Set()
+  );
+  const [activeHandlers, setActiveHandlers] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<SortOption>("newest");
   const isDesktop = useIsDesktop();
 
@@ -162,6 +167,18 @@ export default function BoardPage() {
     });
   }
 
+  function togglePerson(
+    setter: Dispatch<SetStateAction<Set<string>>>,
+    key: string
+  ) {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     for (const bug of bugs) {
@@ -169,6 +186,9 @@ export default function BoardPage() {
     }
     return [...tags].sort();
   }, [bugs]);
+
+  const allReporters = useMemo(() => collectPeople(bugs, "reported_by"), [bugs]);
+  const allHandlers = useMemo(() => collectPeople(bugs, "handled_by"), [bugs]);
 
   function sortBugs(list: Bug[]): Bug[] {
     const sorted = [...list];
@@ -188,6 +208,8 @@ export default function BoardPage() {
     if (!activePriorities.has(b.priority)) return false;
     if (!activeIssueTypes.has(b.issue_type)) return false;
     if (activeTags.size > 0 && !b.tags.some((t) => activeTags.has(t))) return false;
+    if (!matchesPeople(activeReporters, b.reported_by)) return false;
+    if (!matchesPeople(activeHandlers, b.handled_by)) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -265,6 +287,12 @@ export default function BoardPage() {
         allTags={allTags}
         activeTags={activeTags}
         onToggleTag={toggleTag}
+        allReporters={allReporters}
+        activeReporters={activeReporters}
+        onToggleReporter={(key) => togglePerson(setActiveReporters, key)}
+        allHandlers={allHandlers}
+        activeHandlers={activeHandlers}
+        onToggleHandler={(key) => togglePerson(setActiveHandlers, key)}
         sort={sort}
         onSortChange={setSort}
       />
