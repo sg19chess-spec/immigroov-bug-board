@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Bug, BugPriority, IssueType } from "@/lib/types";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
 import ReporterSelect from "@/components/ReporterSelect";
+import HandlerSelect from "@/components/HandlerSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
 import ScreenshotField from "@/components/ScreenshotField";
@@ -24,6 +25,7 @@ export default function EditBugModal({
   const [title, setTitle] = useState(bug.title);
   const [description, setDescription] = useState(bug.description ?? "");
   const [reportedBy, setReportedBy] = useState(bug.reported_by ?? "");
+  const [handledBy, setHandledBy] = useState(bug.handled_by ?? "");
   const [priority, setPriority] = useState<BugPriority>(bug.priority);
   const [issueType, setIssueType] = useState<IssueType>(bug.issue_type);
   const [tags, setTags] = useState<string[]>(bug.tags ?? []);
@@ -52,6 +54,7 @@ export default function EditBugModal({
           title,
           description,
           reported_by: reportedBy,
+          handled_by: handledBy,
           screenshot_urls,
           priority,
           issue_type: issueType,
@@ -141,6 +144,13 @@ export default function EditBugModal({
               Reported by
             </label>
             <ReporterSelect value={reportedBy} onChange={setReportedBy} />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Handled by
+            </label>
+            <HandlerSelect value={handledBy} onChange={setHandledBy} />
           </div>
 
           <div>

@@ -13,6 +13,7 @@ create table if not exists bugs (
     check (issue_type in ('bug', 'feature_request')),
   ref_id text unique,
   reported_by text,
+  handled_by text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

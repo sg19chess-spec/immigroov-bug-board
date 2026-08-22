@@ -14,6 +14,7 @@ export async function PATCH(
     title,
     description,
     reported_by,
+    handled_by,
     screenshot_urls,
     priority,
     issue_type,
@@ -37,6 +38,7 @@ export async function PATCH(
   if (title !== undefined) update.title = title;
   if (description !== undefined) update.description = description;
   if (reported_by !== undefined) update.reported_by = reported_by;
+  if (handled_by !== undefined) update.handled_by = handled_by;
   if (screenshot_urls !== undefined) update.screenshot_urls = screenshot_urls;
   if (priority !== undefined) update.priority = priority;
   if (issue_type !== undefined) update.issue_type = issue_type;

@@ -17,6 +17,7 @@ export interface Bug {
   issue_type: IssueType;
   tags: string[];
   reported_by: string | null;
+  handled_by: string | null;
   created_at: string;
   updated_at: string;
 }

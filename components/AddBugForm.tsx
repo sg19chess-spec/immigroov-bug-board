@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadScreenshots } from "@/lib/uploadScreenshots";
 import ReporterSelect from "@/components/ReporterSelect";
+import HandlerSelect from "@/components/HandlerSelect";
 import PrioritySelect from "@/components/PrioritySelect";
 import IssueTypeSelect from "@/components/IssueTypeSelect";
 import ScreenshotField from "@/components/ScreenshotField";
@@ -15,6 +16,7 @@ export default function AddBugForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [reportedBy, setReportedBy] = useState("");
+  const [handledBy, setHandledBy] = useState("");
   const [priority, setPriority] = useState<BugPriority>("medium");
   const [issueType, setIssueType] = useState<IssueType>("bug");
   const [tags, setTags] = useState<string[]>([]);
@@ -42,6 +44,7 @@ export default function AddBugForm() {
           title,
           description,
           reported_by: reportedBy,
+          handled_by: handledBy,
           screenshot_urls,
           priority,
           issue_type: issueType,
@@ -106,6 +109,13 @@ export default function AddBugForm() {
           Reported by
         </label>
         <ReporterSelect value={reportedBy} onChange={setReportedBy} />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Handled by
+        </label>
+        <HandlerSelect value={handledBy} onChange={setHandledBy} />
       </div>
 
       <div>

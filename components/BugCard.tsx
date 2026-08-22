@@ -147,8 +147,13 @@ export default function BugCard({
           {new Date(bug.created_at).toLocaleDateString()}
         </span>
       </div>
-      <div className="mt-1 text-[11px] font-medium text-slate-500">
-        {bug.reported_by || "Anonymous"}
+      <div className="mt-1 flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
+        <span>{bug.reported_by || "Anonymous"}</span>
+        {bug.handled_by && (
+          <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-indigo-700">
+            {bug.handled_by}
+          </span>
+        )}
       </div>
     </div>
   );

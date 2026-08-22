@@ -114,6 +114,7 @@ export default function IssueDetailPage({
 
         <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
           <span>Reported by {bug.reported_by || "Anonymous"}</span>
+          <span>Handled by {bug.handled_by || "Unassigned"}</span>
           <span>Created {new Date(bug.created_at).toLocaleDateString()}</span>
         </div>
       </div>
