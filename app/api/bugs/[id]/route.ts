@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { BUG_PRIORITIES, BUG_STATUSES, ISSUE_TYPES } from "@/lib/types";
 import { normalizeTags } from "@/lib/tags";
+import { recordBugStageChange } from "@/lib/boardStages";
 
 export async function PATCH(
   request: NextRequest,
@@ -11,6 +12,7 @@ export async function PATCH(
   const body = await request.json();
   const {
     status,
+    changed_by,
     title,
     description,
     reported_by,
@@ -25,6 +27,13 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid status" }, { status: 400 });
   }
 
+  if (status !== undefined && (typeof changed_by !== "string" || !changed_by.trim())) {
+    return NextResponse.json(
+      { error: "changed_by is required when changing status" },
+      { status: 400 }
+    );
+  }
+
   if (priority !== undefined && !BUG_PRIORITIES.includes(priority)) {
     return NextResponse.json({ error: "invalid priority" }, { status: 400 });
   }
@@ -33,8 +42,28 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid issue_type" }, { status: 400 });
   }
 
+  if (status !== undefined) {
+    const { data: existing, error: fetchError } = await supabase
+      .from("bugs")
+      .select("status")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    }
+
+    if (existing.status !== status) {
+      try {
+        await recordBugStageChange(id, existing.status, status, changed_by);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to change stage";
+        return NextResponse.json({ error: message }, { status: 500 });
+      }
+    }
+  }
+
   const update: Record<string, unknown> = {};
-  if (status !== undefined) update.status = status;
   if (title !== undefined) update.title = title;
   if (description !== undefined) update.description = description;
   if (reported_by !== undefined) update.reported_by = reported_by;
@@ -43,6 +72,14 @@ export async function PATCH(
   if (priority !== undefined) update.priority = priority;
   if (issue_type !== undefined) update.issue_type = issue_type;
   if (tags !== undefined) update.tags = normalizeTags(tags);
+
+  if (Object.keys(update).length === 0) {
+    const { data, error } = await supabase.from("bugs").select("*").eq("id", id).single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json(data);
+  }
 
   const { data, error } = await supabase
     .from("bugs")

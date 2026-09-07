@@ -3,10 +3,12 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bug } from "@/lib/types";
+import { Bug, TestingEntry, TEST_ENVIRONMENT_LABELS } from "@/lib/types";
 import StatusBadge from "@/components/StatusBadge";
 import PriorityBadge from "@/components/PriorityBadge";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CommitBadge from "@/components/CommitBadge";
+import { formatDateTime } from "@/lib/time";
 
 export default function IssueDetailPage({
   params,
@@ -16,6 +18,7 @@ export default function IssueDetailPage({
   const { refId } = use(params);
   const [bug, setBug] = useState<Bug | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [latestTest, setLatestTest] = useState<TestingEntry | null>(null);
 
   useEffect(() => {
     fetch(`/api/bugs/ref/${refId}`)
@@ -26,6 +29,18 @@ export default function IssueDetailPage({
       .then(setBug)
       .catch(() => setNotFound(true));
   }, [refId]);
+
+  useEffect(() => {
+    if (!bug) return;
+    fetch(`/api/bugs/${bug.id}/testing`)
+      .then((res) => res.json())
+      .then((entries: TestingEntry[]) => {
+        const resolved = (Array.isArray(entries) ? entries : []).filter(
+          (e) => e.status !== "pending"
+        );
+        setLatestTest(resolved[0] ?? null);
+      });
+  }, [bug]);
 
   if (notFound) {
     return (
@@ -116,7 +131,23 @@ export default function IssueDetailPage({
           <span>Reported by {bug.reported_by || "Anonymous"}</span>
           <span>Handled by {bug.handled_by || "Unassigned"}</span>
           <span>Created {new Date(bug.created_at).toLocaleDateString()}</span>
+          <span>Last Stage Change: {formatDateTime(bug.last_stage_change ?? bug.created_at)}</span>
         </div>
+
+        {latestTest && (
+          <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+            <p className="mb-1 font-semibold text-slate-700">Latest Test Result</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span>{TEST_ENVIRONMENT_LABELS[latestTest.environment]}</span>
+              <CommitBadge sha={latestTest.commit_sha} url={latestTest.commit_url} />
+              <span className={latestTest.status === "passed" ? "text-emerald-700" : "text-red-700"}>
+                {latestTest.status === "passed" ? "Passed" : "Failed"}
+              </span>
+              <span>by {latestTest.tested_by || "—"}</span>
+              <span>{formatDateTime(latestTest.tested_at)}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import ReporterSelect from "@/components/ReporterSelect";
+import PersonSelect from "@/components/PersonSelect";
+import { PEOPLE } from "@/lib/currentPerson";
+import { useRequireActingPerson } from "@/components/ActingAsProvider";
 import { Todo } from "@/lib/types";
 
 export default function AddTodoForm({
@@ -9,8 +11,9 @@ export default function AddTodoForm({
 }: {
   onAdded: (todo: Todo) => void;
 }) {
+  const requirePerson = useRequireActingPerson();
   const [description, setDescription] = useState("");
-  const [reportedBy, setReportedBy] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,10 +27,15 @@ export default function AddTodoForm({
     setSubmitting(true);
     setError(null);
     try {
+      const assignedBy = await requirePerson();
       const res = await fetch("/api/todos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, reported_by: reportedBy }),
+        body: JSON.stringify({
+          description,
+          reported_by: assignedBy,
+          assigned_to: assignedTo,
+        }),
       });
 
       if (!res.ok) {
@@ -38,9 +46,9 @@ export default function AddTodoForm({
       const todo = await res.json();
       onAdded(todo);
       setDescription("");
-      setReportedBy("");
+      setAssignedTo("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof Error) setError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -60,7 +68,12 @@ export default function AddTodoForm({
       />
       <div className="flex gap-2 md:w-56 md:flex-col">
         <div className="flex-1">
-          <ReporterSelect value={reportedBy} onChange={setReportedBy} />
+          <PersonSelect
+            value={assignedTo}
+            onChange={setAssignedTo}
+            people={PEOPLE}
+            placeholder="Assign to..."
+          />
         </div>
         <button
           type="submit"

@@ -1,36 +1,33 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { Bug, BugStatus, STATUS_LABELS } from "@/lib/types";
-import BugCard from "./BugCard";
+import { Todo, TodoStage, TODO_STAGE_LABELS } from "@/lib/types";
+import TodoCard from "@/components/TodoCard";
 
-const DOT_COLORS: Record<BugStatus, string> = {
-  yet_to_review: "bg-slate-400",
-  planned: "bg-indigo-500",
+const DOT_COLORS: Record<TodoStage, string> = {
+  assigned: "bg-slate-400",
   in_progress: "bg-amber-500",
-  to_be_tested: "bg-sky-500",
-  tested: "bg-teal-500",
   completed: "bg-emerald-500",
 };
 
-export default function BugColumn({
-  status,
-  bugs,
+export default function TodoColumn({
+  stage,
+  todos,
   onCardClick,
-  onEdit,
+  onOpenDetail,
   onDelete,
   draggable = true,
   className,
 }: {
-  status: BugStatus;
-  bugs: Bug[];
-  onCardClick?: (bug: Bug) => void;
-  onEdit?: (bug: Bug) => void;
-  onDelete?: (bug: Bug) => void;
+  stage: TodoStage;
+  todos: Todo[];
+  onCardClick?: (todo: Todo) => void;
+  onOpenDetail: (todo: Todo) => void;
+  onDelete: (todo: Todo) => void;
   draggable?: boolean;
   className?: string;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   return (
     <div
@@ -40,25 +37,25 @@ export default function BugColumn({
       } ${className ?? ""}`}
     >
       <h2 className="mb-3 flex items-center gap-2 px-1 text-sm font-semibold text-slate-700">
-        <span className={`h-2 w-2 rounded-full ${DOT_COLORS[status]}`} />
-        {STATUS_LABELS[status]}
+        <span className={`h-2 w-2 rounded-full ${DOT_COLORS[stage]}`} />
+        {TODO_STAGE_LABELS[stage]}
         <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-500 ring-1 ring-slate-200">
-          {bugs.length}
+          {todos.length}
         </span>
       </h2>
       <div className="flex min-h-[4rem] flex-col gap-2">
-        {bugs.length === 0 ? (
+        {todos.length === 0 ? (
           <p className="rounded-lg border border-dashed border-slate-300 py-6 text-center text-xs text-slate-400">
-            No bugs here
+            No tasks here
           </p>
         ) : (
-          bugs.map((bug) => (
-            <BugCard
-              key={bug.id}
-              bug={bug}
-              onClick={() => onCardClick?.(bug)}
-              onEdit={onEdit ? () => onEdit(bug) : undefined}
-              onDelete={onDelete ? () => onDelete(bug) : undefined}
+          todos.map((todo) => (
+            <TodoCard
+              key={todo.id}
+              todo={todo}
+              onClick={() => onCardClick?.(todo)}
+              onOpenDetail={() => onOpenDetail(todo)}
+              onDelete={() => onDelete(todo)}
               draggable={draggable}
             />
           ))

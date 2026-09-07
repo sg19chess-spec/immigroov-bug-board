@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Image from "next/image";
-import { Bug, BugPriority } from "@/lib/types";
+import { Bug, BugPriority, TEST_ENVIRONMENT_LABELS, TEST_STATUS_LABELS } from "@/lib/types";
 import PriorityBadge from "@/components/PriorityBadge";
 import ImageLightbox from "@/components/ImageLightbox";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CommitBadge from "@/components/CommitBadge";
+import { formatDateTime } from "@/lib/time";
 
 const BORDER_COLORS: Record<BugPriority, string> = {
   high: "border-l-red-500",
@@ -155,6 +157,23 @@ export default function BugCard({
           </span>
         )}
       </div>
+
+      <div className="mt-1 text-[10px] text-slate-400">
+        Last Stage Change: {formatDateTime(bug.last_stage_change ?? bug.created_at)}
+      </div>
+
+      {bug.pending_test && (
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-2 flex flex-wrap items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-[10px] font-medium text-amber-800 ring-1 ring-amber-200"
+        >
+          <span>{TEST_ENVIRONMENT_LABELS[bug.pending_test.environment]}</span>
+          <CommitBadge sha={bug.pending_test.commit_sha} url={bug.pending_test.commit_url} />
+          <span>{bug.pending_test.assigned_tester || "Unassigned"}</span>
+          <span className="ml-auto">{TEST_STATUS_LABELS[bug.pending_test.status]}</span>
+        </div>
+      )}
     </div>
   );
 }

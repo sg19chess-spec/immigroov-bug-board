@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActingAsPicker from "@/components/ActingAsPicker";
 
 export default function Header() {
   return (
@@ -35,6 +36,7 @@ export default function Header() {
           >
             Tested Scenarios
           </Link>
+          <ActingAsPicker />
         </nav>
       </div>
     </header>

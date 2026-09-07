@@ -27,6 +27,7 @@ import FilterBar, { SortOption } from "@/components/FilterBar";
 import CopyMarkdownButton from "@/components/CopyMarkdownButton";
 import { collectPeople, matchesPeople } from "@/lib/people";
 import { useIsDesktop } from "@/lib/useIsDesktop";
+import { useRequireActingPerson } from "@/components/ActingAsProvider";
 
 const PRIORITY_ORDER: Record<BugPriority, number> = {
   high: 0,
@@ -54,6 +55,7 @@ export default function BoardPage() {
   const [activeHandlers, setActiveHandlers] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<SortOption>("newest");
   const isDesktop = useIsDesktop();
+  const requirePerson = useRequireActingPerson();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -84,8 +86,10 @@ export default function BoardPage() {
                 : [payload.new as Bug, ...prev]
             );
           } else if (payload.eventType === "UPDATE") {
+            // Merge rather than replace: realtime payloads only carry real
+            // DB columns, not the server-computed last_stage_change/pending_test.
             setBugs((prev) =>
-              prev.map((b) => (b.id === payload.new.id ? (payload.new as Bug) : b))
+              prev.map((b) => (b.id === payload.new.id ? { ...b, ...payload.new } : b))
             );
           } else if (payload.eventType === "DELETE") {
             setBugs((prev) => prev.filter((b) => b.id !== payload.old.id));
@@ -100,12 +104,19 @@ export default function BoardPage() {
   }, []);
 
   async function updateStatus(id: string, status: BugStatus) {
+    let changedBy: string;
+    try {
+      changedBy = await requirePerson();
+    } catch {
+      return; // user cancelled the "who's this?" prompt
+    }
+
     setBugs((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
 
     const res = await fetch(`/api/bugs/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, changed_by: changedBy }),
     });
 
     if (!res.ok) {
@@ -225,7 +236,14 @@ export default function BoardPage() {
       acc[status] = sortBugs(filteredBugs.filter((b) => b.status === status));
       return acc;
     },
-    { yet_to_review: [], in_progress: [], to_be_tested: [], completed: [] }
+    {
+      yet_to_review: [],
+      planned: [],
+      in_progress: [],
+      to_be_tested: [],
+      tested: [],
+      completed: [],
+    }
   );
 
   if (loading) {
@@ -316,7 +334,7 @@ export default function BoardPage() {
 
       {isDesktop ? (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {BUG_STATUSES.map((status) => (
               <BugColumn
                 key={status}
